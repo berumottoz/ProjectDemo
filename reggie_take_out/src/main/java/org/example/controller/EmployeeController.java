@@ -75,12 +75,13 @@ public class EmployeeController {
 
     /**
      * 新增员工
+     *
      * @param employee
      * @return
      */
     @PostMapping
-    public R<String> save(HttpServletRequest request,@RequestBody Employee employee){
-        log.info("新增员工，员工信息：{}",employee.toString());
+    public R<String> save(HttpServletRequest request, @RequestBody Employee employee) {
+        log.info("新增员工，员工信息：{}", employee.toString());
 
         //设置初始密码123456，需要进行md5加密处理
         employee.setPassword(DigestUtils.md5DigestAsHex("123456".getBytes()));
@@ -97,6 +98,34 @@ public class EmployeeController {
         employeeService.save(employee);
 
         return R.success("新增员工成功");
+    }
+
+    /**
+     * 员工信息分页查询
+     *
+     * @param page
+     * @param pageSize
+     * @param name
+     * @return
+     */
+    @GetMapping("/page")
+    public R<Page> page(int page, int pageSize, String name) {
+        log.info("page = {},pageSize = {},name = {}", page, pageSize, name);
+
+        //构造分页构造器
+        Page pageInfo = new Page(page, pageSize);
+
+        //构造条件构造器
+        LambdaQueryWrapper<Employee> queryWrapper = new LambdaQueryWrapper();
+        //添加过滤条件
+        queryWrapper.like(StringUtils.isNotEmpty(name), Employee::getName, name);
+        //添加排序条件
+        queryWrapper.orderByDesc(Employee::getUpdateTime);
+
+        //执行查询
+        employeeService.page(pageInfo, queryWrapper);
+
+        return R.success(pageInfo);
     }
 
 }
